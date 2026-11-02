@@ -156,12 +156,11 @@ class Watcher(Agent):
         warden = config.PROJECTS / "warden" / "warden"
         if not warden.exists():
             return False, "warden launcher not found"
-        inventory = Path.home() / "lab" / "warden.toml"
         argv = [str(warden), "check", "--plain", "--no-save"]
-        if inventory.exists():
-            argv += ["--inventory", str(inventory)]
+        if config.WARDEN_INVENTORY.exists():
+            argv += ["--inventory", str(config.WARDEN_INVENTORY)]
         code, output = run(argv, cwd=warden.parent, timeout=self.timeout,
-                           env={"WARDEN_DATA_DIR": str(Path.home() / "lab" / ".data")})
+                           env={"WARDEN_DATA_DIR": str(config.WARDEN_DATA)})
         match = re.search(r"(\d+) services?\s*·\s*(\d+) ok(?:\s*·\s*(\d+) warn)?"
                           r"(?:\s*·\s*(\d+) fail)?", output)
         if not match:

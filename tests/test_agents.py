@@ -128,11 +128,14 @@ class WatcherAgent(Base):
         launcher.write_text(f"#!/bin/sh\necho \"$@\" > {seen}\n"
                             "echo '16 services · 16 ok  1.2s'\n")
         launcher.chmod(0o755)
-        (Path.home() / "lab").mkdir(parents=True, exist_ok=True)
-        ok, _ = agentsmod.Watcher().act(self.ctx, Task(agent="watcher", kind="check",
-                                                       title="warden check"))
-        arguments = seen.read_text()
-        self.assertIn("--inventory", arguments)
+        inventory = self.tmp / "warden.toml"
+        inventory.write_text("# empty inventory\n")
+        with mock.patch.object(config, "WARDEN_INVENTORY", inventory), \
+             mock.patch.object(config, "WARDEN_DATA", self.tmp / "warden-data"):
+            ok, _ = agentsmod.Watcher().act(self.ctx, Task(agent="watcher", kind="check",
+                                                           title="warden check"))
+        self.assertIn("--inventory", seen.read_text())
+        self.assertIn(str(inventory), seen.read_text())
 
     def test_unparseable_output_is_a_failure(self) -> None:
         self.install_warden("something else entirely")

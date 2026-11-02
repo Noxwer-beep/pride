@@ -16,6 +16,10 @@ VERSION = "1.0.0"
 HOME = Path.home()
 PROJECTS = Path(os.environ.get("PRIDE_PROJECTS", HOME / "projects"))
 VAULT = Path(os.environ.get("PRIDE_VAULT", HOME / "Obsidian"))
+#: Where the homelab inventory and its state live. Config, not a constant inside an
+#: agent — a test must not have to own the real ~/lab to exercise the watcher.
+WARDEN_INVENTORY = Path(os.environ.get("PRIDE_WARDEN_INVENTORY", HOME / "lab" / "warden.toml"))
+WARDEN_DATA = Path(os.environ.get("PRIDE_WARDEN_DATA", HOME / "lab" / ".data"))
 ACCENT = "#c9f24d"
 
 #: Sites the sentinel watches. Name → URL. These are read-only HEAD/GET probes.
