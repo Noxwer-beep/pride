@@ -1,0 +1,20 @@
+[Unit]
+Description=Pride — supervised agent pack (sites, services, tests, scans, digest)
+Documentation=file:///home/nox/projects/pride/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/nox/projects/pride/pride daemon --interval 60
+WorkingDirectory=/home/nox/projects/pride
+Restart=on-failure
+RestartSec=30
+# an unattended loop should not be able to grow without bound
+MemoryMax=512M
+CPUQuota=50%
+StandardOutput=append:/home/nox/.local/share/pride/logs/daemon.log
+StandardError=append:/home/nox/.local/share/pride/logs/daemon.log
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pride — the pack</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='9' fill='%230b0d10'/><polygon points='7,18 3,5 15,12' fill='%23e8ecef'/><polygon points='33,18 37,5 25,12' fill='%23e8ecef'/><rect x='5' y='13' width='30' height='22' rx='6' fill='%23e8ecef'/><rect x='12' y='20' width='4' height='8' rx='2' fill='%230b0d10'/><rect x='24' y='20' width='4' height='8' rx='2' fill='%230b0d10'/><path d='M18 29h4l-2 3z' fill='%23c9f24d'/></svg>">
+</head>
+<body>
+<header class="bar">
+  <span class="mark"></span>
+  <span class="word">PRIDE</span>
+  <span class="sub">{{ agents|length }} agents · one queue · no prompt</span>
+  <span class="daemon {{ 'on' if daemon else 'off' }}">
+    <span class="dot"></span>{{ 'daemon running' if daemon else 'daemon stopped' }}
+  </span>
+</header>
+
+<main>
+  {% if approvals %}
+  <section class="waiting">
+    <h2>Waiting for you <span class="count">{{ approvals|length }}</span></h2>
+    <table class="data">
+      <thead><tr><th>id</th><th>agent</th><th>action</th><th>task</th><th>asked</th></tr></thead>
+      <tbody>
+      {% for a in approvals %}
+        <tr>
+          <td class="mono">{{ a['id'] }}</td>
+          <td>{{ a['agent'] or '?' }}</td>
+          <td class="mono">{{ a['action'] }}</td>
+          <td>{{ (a['title'] or '')[:48] }}</td>
+          <td class="dim">{{ age(a['requested']) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="note">Approve from the terminal: <code>pride approve &lt;id&gt;</code></p>
+  </section>
+  {% endif %}
+
+  <section class="agents">
+    {% for a in agents %}
+    <article class="agent {{ 'due' if a.due else '' }}">
+      <header>
+        <h3>{{ a.name }}</h3>
+        <span class="chip chip-{{ a.decision }}">{{ a.decision|replace('require_approval','asks first') }}</span>
+      </header>
+      <p class="does">{{ a.description }}</p>
+      <dl>
+        <div><dt>cadence</dt><dd>{{ (a.cadence // 60) }}m</dd></div>
+        <div><dt>last run</dt><dd>{{ a.last }}</dd></div>
+        <div><dt>needs</dt><dd class="mono">{{ a.action }}</dd></div>
+      </dl>
+    </article>
+    {% endfor %}
+  </section>
+
+  <section class="grid">
+    <div>
+      <h2>Queue
+        {% for state, n in counts.items() %}<span class="chip chip-{{ state }}">{{ n }} {{ state }}</span>{% endfor %}
+      </h2>
+      {% if tasks %}
+      <table class="data">
+        <thead><tr><th>state</th><th>agent</th><th>task</th><th>result</th><th class="r">age</th></tr></thead>
+        <tbody>
+        {% for t in tasks %}
+          <tr>
+            <td><span class="chip chip-{{ t['state'] }}">{{ t['state']|replace('awaiting_approval','waiting') }}</span></td>
+            <td>{{ t['agent'] }}</td>
+            <td>{{ t['title'][:34] }}</td>
+            <td class="dim">{{ (t['result'] or '')[:56] }}</td>
+            <td class="r dim">{{ age(t['updated']) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty">Nothing queued. <code>pride cycle</code> to take a pass.</p>
+      {% endif %}
+    </div>
+
+    <div>
+      <h2>What happened</h2>
+      <ul class="log">
+        {% for e in events %}
+        <li class="lvl-{{ e['level'] }}">
+          <span class="time">{{ e['at'][11:19] }}</span>
+          <span class="who">{{ e['agent'] }}</span>
+          <span class="msg">{{ e['message'][:96] }}</span>
+        </li>
+        {% else %}
+        <li class="empty">Nothing yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <section class="policy">
+    <h2>Policy <span class="dim small">{{ policy.source.split('/')[-1] }}{{ ' · dry run' if policy.dry_run }}</span></h2>
+    <div class="rows">
+      <div><span class="chip chip-allow">allow</span> {{ policy.allow|sort|join(' · ') }}</div>
+      <div><span class="chip chip-require_approval">asks first</span> {{ policy.ask|sort|join(' · ') }}</div>
+      <div><span class="chip chip-forbid">forbid</span> {{ policy.forbid|sort|join(' · ') }}</div>
+      <div><span class="chip chip-info">authorised</span> {{ policy.authorized_targets|join(', ') or 'none' }}</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>pride {{ version }}</span>
+  <span>reads privilege.db · re-read on every load · auto-refresh {{ refresh }}s · <a href="/api/status">json</a></span>
+</footer>
+
+<script>
+  setTimeout(function () { location.reload(); }, {{ refresh }} * 1000);
+</script>
+</body>
+</html>

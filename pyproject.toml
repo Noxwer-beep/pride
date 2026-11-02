@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pride"
+version = "1.0.0"
+description = "A supervised pack of agents that runs on a cadence, not a prompt."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Maximilian Jatzkowski", email = "jatzkowski.maximilian@gmail.com" }]
+keywords = ["agents", "automation", "homelab", "security", "monitoring", "scheduler"]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Security",
+  "Topic :: System :: Monitoring",
+]
+dependencies = ["rich>=13"]
+
+[project.optional-dependencies]
+ui = ["flask>=2.3"]
+full = ["flask>=2.3"]
+
+[project.scripts]
+pride = "pride.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"pride.web" = ["templates/*.html", "static/*.css"]
